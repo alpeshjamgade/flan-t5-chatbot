@@ -190,8 +190,6 @@ class ChatEngine:
                     attention_mask=inputs['attention_mask'],
                     max_new_tokens=100,
                     min_length=5,
-                    num_beams=16,
-                    no_repeat_ngram_size=2,
                     temperature=self.generation_config.temperature,
                     top_p=self.generation_config.top_p,
                     top_k=self.generation_config.top_k,
@@ -199,11 +197,12 @@ class ChatEngine:
                     do_sample=self.generation_config.do_sample,
                     pad_token_id=self.tokenizer.pad_token_id,
                     eos_token_id=self.tokenizer.eos_token_id,
+                    no_repeat_ngram_size=3
                 )
 
             # Decode response
-            response = self.tokenizer.batch_decode(
-                outputs,
+            response = self.tokenizer.decode(
+                outputs[0],
                 skip_special_tokens=True,
                 clean_up_tokenization_spaces=True
             )
