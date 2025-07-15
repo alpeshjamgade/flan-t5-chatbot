@@ -30,15 +30,10 @@ class UIManager:
             Colors.disable_colors()
         else:
             # Force enable colors if not already enabled
-            if not Colors._colors_enabled:
+            if not Colors.colors_enabled:
                 Colors.enable_colors()
         
-        # Debug: Print color status
-        print(f"🎨 UI Manager - Colors enabled: {Colors._colors_enabled}")
-        if Colors._colors_enabled:
-            print(f"{Colors.GREEN}✅ Colors should be working{Colors.RESET}")
-        else:
-            print("❌ Colors are disabled")
+
     
     def _get_terminal_width(self) -> int:
         """Get terminal width"""
@@ -49,7 +44,7 @@ class UIManager:
     
     def _supports_color(self) -> bool:
         """Check if terminal supports colors"""
-        return Colors._colors_enabled
+        return Colors.colors_enabled
     
     def print_header(self):
         """Print application header"""
@@ -136,7 +131,7 @@ Type {Colors.BOLD}/help{Colors.RESET} for available commands.
     
     def print_info(self, message: str):
         """Print info message"""
-        print(f"{Colors.CYAN}ℹ {message}{Colors.RESET}")
+        print(f"{Colors.CYAN} {message}{Colors.RESET}")
     
     def print_success(self, message: str):
         """Print success message"""

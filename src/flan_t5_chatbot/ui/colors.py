@@ -42,9 +42,9 @@ class Colors:
         return True
     
     # Initialize colors based on detection
-    _colors_enabled = _should_use_colors()
+    colors_enabled = _should_use_colors()
     
-    if _colors_enabled:
+    if colors_enabled:
         RESET = '\033[0m'
         BOLD = '\033[1m'
         DIM = '\033[2m'
@@ -89,7 +89,7 @@ class Colors:
     @classmethod
     def disable_colors(cls):
         """Disable all colors by setting them to empty strings"""
-        cls._colors_enabled = False
+        cls.colors_enabled = False
         cls.RESET = cls.BOLD = cls.DIM = ''
         cls.BLACK = cls.RED = cls.GREEN = cls.YELLOW = cls.BLUE = ''
         cls.MAGENTA = cls.CYAN = cls.WHITE = ''
@@ -101,7 +101,7 @@ class Colors:
     @classmethod
     def enable_colors(cls):
         """Force enable all colors"""
-        cls._colors_enabled = True
+        cls.colors_enabled = True
         cls.RESET = '\033[0m'
         cls.BOLD = '\033[1m'
         cls.DIM = '\033[2m'
@@ -132,7 +132,7 @@ class Colors:
     @classmethod
     def status(cls):
         """Print color status for debugging"""
-        print(f"Colors enabled: {cls._colors_enabled}")
+        print(f"Colors enabled: {cls.colors_enabled}")
         print(f"FORCE_COLOR: {os.environ.get('FORCE_COLOR', 'Not set')}")
         print(f"NO_COLOR: {os.environ.get('NO_COLOR', 'Not set')}")
         print(f"COLORTERM: {os.environ.get('COLORTERM', 'Not set')}")
@@ -140,7 +140,7 @@ class Colors:
         print(f"stdout.isatty(): {hasattr(sys.stdout, 'isatty') and sys.stdout.isatty()}")
         
         # Test colors
-        if cls._colors_enabled:
+        if cls.colors_enabled:
             print(f"{cls.RED}RED{cls.RESET} {cls.GREEN}GREEN{cls.RESET} {cls.BLUE}BLUE{cls.RESET}")
         else:
             print("Colors are disabled")

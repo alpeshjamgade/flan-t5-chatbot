@@ -3,7 +3,7 @@ Chat Engine - Core AI processing using FLAN-T5-Large
 """
 
 import torch
-from transformers import T5ForConditionalGeneration, T5Tokenizer
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 import platform
@@ -49,7 +49,6 @@ class ChatEngine:
         if system == "darwin" and machine in ["arm64", "aarch64"]:
             try:
                 # Check if MPS (Metal Performance Shaders) is available
-                import torch
                 if hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
                     self.logger.info("Using Metal Performance Shaders (MPS) for Apple Silicon")
                     return torch.device("mps")
@@ -78,7 +77,7 @@ class ChatEngine:
         self.logger.info(f"Loading model: {model_name}")
 
         # Load tokenizer
-        self.tokenizer = T5Tokenizer.from_pretrained(
+        self.tokenizer = AutoTokenizer.from_pretrained(
             model_name,
             legacy=False
         )
@@ -100,7 +99,7 @@ class ChatEngine:
             device_map = None
 
         # Load model
-        self.model = T5ForConditionalGeneration.from_pretrained(
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(
             model_name,
             torch_dtype=dtype,
             device_map=device_map
@@ -175,37 +174,36 @@ class ChatEngine:
             inputs = self.tokenizer(
                 prompt,
                 return_tensors="pt",
-                max_length=self.max_context_length,
-                truncation=True,
-                padding=True,
-                return_attention_mask=True
+                # max_length=self.max_context_length,
+                # truncation=True,
+                # padding=True,
+                # return_attention_mask=True
             )
 
-            inputs = {k: v.to(self.device) for k, v in inputs.items()}
-
+            # inputs = {k: v.to(self.device) for k, v in inputs.items()}
+            input_ids = inputs.input_ids.to(self.device)
             # Generate response
             with torch.no_grad():
                 outputs = self.model.generate(
-                    input_ids=inputs['input_ids'],
-                    attention_mask=inputs['attention_mask'],
-                    max_new_tokens=100,
-                    min_length=5,
-                    temperature=self.generation_config.temperature,
-                    top_p=self.generation_config.top_p,
-                    top_k=self.generation_config.top_k,
-                    repetition_penalty=self.generation_config.repetition_penalty,
-                    do_sample=self.generation_config.do_sample,
-                    pad_token_id=self.tokenizer.pad_token_id,
-                    eos_token_id=self.tokenizer.eos_token_id,
-                    no_repeat_ngram_size=3
+                    input_ids=input_ids,
+                    min_length=256,
+                    max_new_tokens=1024,
+                    length_penalty=1.4,
+                    num_beams=16,
+                    no_repeat_ngram_size=2,
+                    temperature=0.7,
+                    top_k=150,
+                    top_p=0.92,
+                    repetition_penalty=2.1,
+                    early_stopping=True
                 )
 
             # Decode response
-            response = self.tokenizer.decode(
-                outputs[0],
+            response = self.tokenizer.batch_decode(
+                outputs,
                 skip_special_tokens=True,
                 clean_up_tokenization_spaces=True
-            )
+            )[0]
 
             # Post-process response
             response = self._post_process_response(response, prompt)
@@ -238,7 +236,7 @@ class ChatEngine:
                 context_str = "Previous conversation:\n" + "\n".join(context_parts) + "\n\n"
 
         # Create the instruction prompt
-        prompt = f"{context_str}You are a helpful AI assistant. Please respond naturally and conversationally to the following message:\n\nUser: {user_input}\nAssistant:"
+        prompt = f"{context_str}User: {user_input}\nAssistant:"
 
         return prompt
 
